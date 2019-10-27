@@ -1,0 +1,73 @@
+﻿/* SCE CONFIDENTIAL
+ * PlayStation(R)Vita Programmer Tool Runtime Library Release 02.000.081
+ * Copyright (C) 2010 Sony Computer Entertainment Inc. 
+ * All Rights Reserved.
+ */
+
+uniform float4x4 wvp;
+uniform float4x4 rot;
+uniform float animationAngle;
+
+void main(
+	float3 aPosition,
+	float4 aColor,
+	float3 aNormal,
+	int aRotationFlag,
+	float2 aTexCoords,
+	float3 aTangent,
+	float4 out vPosition  : POSITION,
+	float2 out vTexCoords : TEXCOORD0,
+	float3 out vNormal    : TEXCOORD1,
+	float3 out vTangent   : TEXCOORD2,
+	float3 out vBitangent : TEXCOORD3,
+	float3 out vWorldPos  : TEXCOORD4,	 
+	float4 out vColor     : COLOR0)
+{
+	if(aRotationFlag == 0)
+	{
+		float3x3 animationMatrix = float3x3
+		( 1,         0,                   0,          
+		  0,  cos(animationAngle), -sin(animationAngle),
+		  0,  sin(animationAngle), cos(animationAngle));
+
+		aPosition  = mul(aPosition,animationMatrix);
+		aNormal    = mul(aNormal,animationMatrix);
+		aTangent   = mul(aTangent,animationMatrix);
+	}
+
+
+	if(aRotationFlag == 1)
+	{
+		float3x3 animationMatrix = float3x3
+		( cos(animationAngle),     0,      -sin(animationAngle),
+		         0,               1,               0,            
+		  sin(animationAngle),     0,      cos(animationAngle));
+
+		aPosition  = mul(aPosition,animationMatrix);
+		aNormal    = mul(aNormal,animationMatrix);
+		aTangent   = mul(aTangent,animationMatrix);
+	}
+
+
+	if(aRotationFlag == 2)
+	{
+		float3x3 animationMatrix = float3x3
+		( cos(animationAngle),  -sin(animationAngle),  0,
+		  sin(animationAngle),  cos(animationAngle),   0,
+		         0,               0,                 1);
+
+		aPosition  = mul(aPosition,animationMatrix);
+		aNormal    = mul(aNormal,animationMatrix);
+		aTangent   = mul(aTangent,animationMatrix);
+	}
+
+
+
+	vPosition  = mul(float4 (aPosition,1.0f) ,wvp);
+	vWorldPos  = mul(float4 (aPosition,1.0f) ,rot).xyz;
+	vNormal    = mul(float4 (aNormal  ,0.0f) ,rot).xyz;
+	vTangent   = mul(float4 (aTangent ,0.0f) ,rot).xyz;
+	vBitangent = cross(vNormal,vTangent);
+	vTexCoords = aTexCoords;
+	vColor = aColor;
+}

@@ -1,0 +1,42 @@
+﻿/* SCE CONFIDENTIAL
+ * PlayStation(R)Vita Programmer Tool Runtime Library Release 02.000.081
+ * Copyright (C) 2010 Sony Computer Entertainment Inc. 
+ * All Rights Reserved.
+ */
+uniform sampler2D normalTex : TEXUNIT1;
+
+float4 calcShading(float3 lightPos, float3 position, float3 normal,float4 color)
+{
+	float diffuseIntensity = 0.75;
+
+	float3 lightDir = normalize(lightPos - position.xyz);
+	float lambertian = diffuseIntensity * dot(lightDir,normal);
+	color = color*lambertian;
+
+	return color;
+}
+
+float4 main(float4 vPosition  : POSITION,
+			float2 vTexCoords : TEXCOORD0,
+			float3 vNormal    : TEXCOORD1,
+			float3 vTangent   : TEXCOORD2,
+			float3 vBitangent : TEXCOORD3,
+			float3 vWorldPos  : TEXCOORD4,
+			float4 vColor     : COLOR0)
+{
+	float3 lightPos = float3(0.0f,0.0f, -8.0f);
+
+	float3 normalMap = normalize(tex2D(normalTex, vTexCoords).rgb *2.0 -1.0);
+
+	float3 normal   =  normalize(vNormal);
+	float3 tangent  =  normalize(vTangent);
+	float3 binormal =  normalize(vBitangent);
+	
+	float3x3 tangentSpace=float3x3(tangent, binormal, normal);
+	normal = mul(normalMap, tangentSpace);
+
+	float4 finalColor = calcShading(lightPos, vWorldPos, normal, vColor);
+	return finalColor;
+
+
+}
